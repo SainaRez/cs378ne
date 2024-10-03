@@ -1,133 +1,185 @@
 <!doctype html>
 <html>
+
 <head>
-<meta charset="utf-8">
-<title>CS394n/p Homework 2: COVID-19 Policy Prescriptions</title>
-<style>
-    /*Shouts to https://jrl.ninja/etc/1/*/
-    main {
-      max-width: 38rem;
-      padding: 2rem;
-      margin: auto;
-    }
-</style>
+    <meta charset="utf-8">
+    <title>CS394n/p Homework 2: COVID-19 Policy Prescriptions</title>
+    <style>
+        /*Shouts to https://jrl.ninja/etc/1/*/
+        main {
+            max-width: 38rem;
+            padding: 2rem;
+            margin: auto;
+        }
+    </style>
 </head>
+
 <body>
-<main>
-    <h1>Homework 2: COVID-19 Policy Prescriptions</h1>
-    <p><b>Due date:</b> October 1, 11:59 p.m.</p>
-    <p><b>Questions:</b> Post to Piazza.</p>
-    <p><b>Format:</b> Jupyter notebook / written report.</p>
+    <main>
+        <h1>Homework 2: COVID-19 Policy Prescriptions</h1>
+        <p><b>Due date:</b> October 1, 11:59 p.m.</p>
+        <p><b>Questions:</b> Post to Piazza.</p>
+        <p><b>Format:</b> Jupyter notebook / written report.</p>
 
-    <h2>Overview</h2>
-    <p>In this homework, you will write a COVID-19 policy prescriptor. The prescriptor generates a plan that defines which policies will be in effect over a period of time. The plan is evaluated on two criteria: (1) the predicted number of <b>cases</b> given the interventions prescribed and (2) the <b>stringency</b> of the interventions.</p>
+        <h2>Overview</h2>
+        <p>In this homework, you will train a COVID-19 policy prescriptor using <a
+                href="https://nn.cs.utexas.edu/?neat">NEAT</a>. The prescriptor generates a plan that defines which
+            policies will be in effect over a period of time. The plan is evaluated on two criteria: (1) the predicted
+            number of <b>cases</b> given the interventions prescribed and (2) the <b>stringency</b> of the
+            interventions.</p>
 
-    <p>Success is about balance between stringency and cases. Your model will output a number of different proposals, which ideally habitate different regions on the <a href="https://en.wikipedia.org/wiki/Pareto_efficiency">Pareto frontier</a>. A policy plan is better than another if it has the same or fewer predicted cases and is either the same or less stringent.</p>
+        <p>Success is about balance between stringency and cases. Your model will output a number of different
+            proposals, which ideally habitate different regions on the <a
+                href="https://en.wikipedia.org/wiki/Pareto_efficiency">Pareto frontier</a>. A policy plan is better than
+            another if it has the same or fewer predicted cases and is either the same or less stringent.</p>
 
-    <p>In homework 1, you trained a case prediction model. In this homework, you will use one that has been pretrained. The file <code>examples/lstm/trained_model.h5</code> represents an LSTM predictor model. It can be invoked by <code>predict.py</code>, as you will see in the example. It can also be instantiated directly.</p>
+        <p>In this homework, you will use one that has been pretrained. The file
+            <code>examples/lstm/trained_model.h5</code> represents an LSTM predictor model. It can be invoked by
+            <code>predict.py</code>, as you will see in the example. It can also be instantiated directly.
+        </p>
 
-    <p>The goal of the homework is to implement your own prescriptor model using an evolutionary search or reinforcement learning method of your choice. You are provided a worked example, and you will pick a method to extend it. <b>This assignment is longer and more open-ended than Homework 1. Be sure to allocate enough time.</b></p>
+        <p><b>This assignment is longer and more open-ended than Homework 1. Be sure to allocate enough time.</b></p>
 
-    <h2>Steps</h2>
-    <h3>1. Download the code and dependencies</h3>
-    <h4>Download the code and switch to the assignment branch</h4>
-    <p>The code is available on GitHub. The original repository is <a href="https://github.com/leaf-ai/covid-xprize">here</a>, though a fork has been updated to work with the latest data <a href="https://github.com/priyankamandikal/covid-xprize-utcs-cs394n-f24">here</a>. You may download it with the following commands:
-    <br><code>git clone https://github.com/priyankamandikal/covid-xprize-utcs-cs394n-f24.git <br>
-    cd covid-xprize-utcs-cs394n-f24 <br>
-    </code></p>
+        <h2>Steps</h2>
+        <h3>1. Download the code and dependencies</h3>
+        <h4>Download the code and switch to the assignment branch</h4>
+        <p>The code is available on GitHub. The original repository is <a
+                href="https://github.com/leaf-ai/covid-xprize">here</a>, though a fork has been updated to work with the
+            latest data <a href="https://github.com/SainaRez/covid-xprize-cs378ne.git">here</a>. You may
+            download it with the following commands:
+            <br><code>git clone https://github.com/SainaRez/covid-xprize-cs378ne.git <br>
+    cd covid-xprize-cs378ne <br>
+    </code>
+        </p>
 
-    <!--
+        <!--
     <p>If you have downloaded the code earlier, you can run the following to get the most recent version:<br>
     <code>git checkout prescriptor-assignment <br>
     git pull</code></p>
     -->
 
-    <h4>Install the dependencies</h4>
-    <code> 
-    conda create --name cs394n_hw2 python=3.10.4 <br>
-    conda activate cs394n_hw2 <br>
+        <h4>Install the dependencies</h4>
+        <code>
+    conda create --name cs378ne_hw5 python=3.10.4 <br>
+    conda activate cs378ne_hw5 <br>
     pip install -r requirements.txt</code></p>
-    If you're on MAC, you can use the <code>requirements_macos.txt</code> file instead. <br>
-    <!-- <p>The example depends on NEAT, which you may install like so: <br>
+        <!-- If you're on MAC, you can use the <code>requirements_macos.txt</code> file instead. <br> -->
+        <!-- <p>The example depends on NEAT, which you may install like so: <br>
     <code>pip3 install neat-python==0.92</code></p>
     Please follow instructions at <a href="hw2-f24/installation.txt">steps-to-install-env-f24.txt</a>. -->
 
-    <h4>Set up the environment</h4>
-    <p>Starting in your <code>covid-xprize-utcs-cs394n-f24</code> directory, run the following to point your PYTHONPATH to the application code:<br>
-    <code>export PYTHONPATH=$PYTHONPATH:`pwd`</code></p>
+        <h4>Set up the environment</h4>
+        <p>Starting in your <code>covid-xprize-cs378ne</code> directory, run the following to point your
+            PYTHONPATH to the application code:<br>
+            <code>export PYTHONPATH=$PYTHONPATH:`pwd`</code>
+        </p>
 
-    <p>Now checkout the assignment branch <br>
-    <code>git checkout prescriptor-assignment</code>
-    </p>
+        <p>Now checkout the assignment branch <br>
+            <code>git checkout prescriptor-assignment</code>
+        </p>
 
-    <p>Also, copy the sample LSTM model into the appropriate directory:<br>
-    <code>mkdir -p examples/predictors/lstm/models &&
-    cp examples/predictors/lstm/tests/fixtures/trained_model_weights_for_tests.h5 examples/predictors/lstm/models/trained_model_weights.h5</code></p>
+        <p>Also, copy the sample LSTM model into the appropriate directory:<br>
+            <code>mkdir -p examples/predictors/lstm/models &&
+    cp examples/predictors/lstm/tests/fixtures/trained_model_weights_for_tests.h5 examples/predictors/lstm/models/trained_model_weights.h5</code>
+        </p>
 
-    <h3>2. Read the example</h3>
-    <p>Change into the example code directory:<br>
-    <code>cd examples/prescriptors/neat/</code></p>
-    <p>Then, read the file <code>train_prescriptor.py</code>. It contains a sample model and training procedure using NEAT. You will need to run it to train and save the sample prescriptor model.</p>
+        <h3>2. Read the example</h3>
+        <p>Change into the example code directory:<br>
+            <code>cd examples/prescriptors/neat/</code>
+        </p>
+        <p>Then, read the file <code>train_prescriptor.py</code>. It contains a sample model and training procedure
+            using NEAT. You will need to run it to train and save the sample prescriptor model.</p>
 
-    <p>Try running the code with the following command:<br>
-    <code>python train_prescriptor.py</code>
-    </p>
-    Examine the code to understand:
-    <ul>
-        <li>What is the format and shape of the input data to the prescriptor?</li>
-        <li>What is the output of the prescriptor?</li>
-        <li>How are the predicted number of new cases and the stringency calculated?</li>
-    </ul>
+        <p>Try running the code with the following command:<br>
+            <code>python train_prescriptor.py</code>
+        </p>
+        Examine the code to understand:
+        <ul>
+            <li>What is the format and shape of the input data to the prescriptor?</li>
+            <li>What is the output of the prescriptor?</li>
+            <li>How are the predicted number of new cases and the stringency calculated?</li>
+        </ul>
 
-    <p>There is another file located <code>prescribe.py</code>. You can evaluate it with the following sample command:<br>
-    <code>python3 prescribe.py --start_date 2020-08-01 --end_date 2020-08-05 -ip none.txt -o test_prescriptions.csv</code>
-    </p>
+        <p>There is another file located <code>prescribe.py</code>. You can evaluate it with the following sample
+            command:<br>
+            <code>python3 prescribe.py --start_date 2020-08-01 --end_date 2020-08-05 -ip none.txt -o test_prescriptions.csv</code>
+        </p>
 
-    <p>Read <code>prescribe.py</code> to understand how the output of the prescriptor model is formatted as a CSV file. Several prescriptors indexed by PrescriptionIndex are saved to the output CSV file, and in this example, they correspond to the model checkpoints saved at intervals throughout training. You may reuse this code in the next steps.</p>
+        <p>Read <code>prescribe.py</code> to understand how the output of the prescriptor model is formatted as a CSV
+            file. Several prescriptors indexed by PrescriptionIndex are saved to the output CSV file, and in this
+            example, they correspond to the model checkpoints saved at intervals throughout training. You may reuse this
+            code in the next steps.</p>
 
-    <h3>3. Decide on a solution to the multiobjective loss</h3>
-    <p>Remember that there are two objectives, minimizing predicted cases and minimizing stringency.</p>
+        <h3>3. Change fitness for training into weighted sum formulation</h3>
+        <p> We have a multi-goal problem setting that we need to consider both making daily cases small and making
+            policy not too stringent. One simple approach is to combine two goals into one single objective function by
+            using weighted sum and setting different weights for these two goals. </p>
 
-    <p>There are a few ways to optimize in a multiobjective setting, such as NSGA-II or MOEA/D. You may pick one of these as your search algorthm for parts 3 and 4.</p>
+        <p> Your job is to implement weighted sum fitness function and play with different weight coefficient settings
+            in <code>train_prescriptor.py</code>. A simple starting point is to use two constants, i.e. on multiplying
+            the number of cases objectve and the other the stringency objective. Train on different coefficients to
+            generate multiple proposals (you can just revise file <code>train_prescriptor.py</code> for simplicity).
+            Save the model checkpoint file which will be used to generate the CSV files. You need to run the file
+            <code>prescribe.py</code> to generate CSV file, but be sure to make model checkpoint file path consistent.
+            You need to generate 10 different proposed prescriptors, e.g. 10, each with different coefficients. Then
+            generate the the corresponding NPI schedules (CSV file) for later evaluation.
+        </p>
 
-    <p>Alternately, you can convert the multiobjective problem into a single objective problem. You would train several models on different weightings of the two objectives. For instance, a model with zero weight on stringency would likely prescribe to shut everything down. This code will iterate through different weightings of the two objectives and then train a model on the weighted sum of each combination.</p>
+        <!-- <h3>4. Select and implement an evolutionary search algorithm</h3>
+        <p>In this step, you will implement your own prescriptor model. You may use any search library of your choice.
+            The sample, <code>train_prescriptor.py</code> finds a good model using NEAT. You will reuse the code from
+            the file which evaluates the objective functions on the prescriptions, but you will replace the parts that
+            use NEAT, i.e., the lines 169 and beyond.</p>
+        <p>Recall that the task is, given an input sequence of intervention policies and case data, to output a sequence
+            of intervention policies. The model should output a CSV file as in <code>prescribe.py</code>.</p>
 
-    <p>Regardless of what method you choose, you should output several prescriptions indexed by PrescriptionIndex. <code>prescribe.py</code> is a good example to modify so that loads your models instead of the NEAT checkpoints. You will also want to look at the fitness function used in <code>train_prescriptor.py</code> (line 174) which you will want to replace with your own weighted fitness function.</p>
-
-    <h3>4. Select and implement a reinforcement or evolutionary search algorithm</h3>
-    <p>In this step, you will implement your own prescriptor model. You may use any search library of your choice. The sample, <code>train_prescriptor.py</code> finds a good model using NEAT. You will reuse the code from the file which evaluates the objective functions on the prescriptions, but you will replace the parts that use NEAT<!--, i.e., the lines 169 and beyond-->.</p>
-
-    <p>Recall that the task is, given an input sequence of intervention policies and case data, to output a sequence of intervention policies. The model should output a CSV file as in <code>prescribe.py</code>.</p>
-
-    <p>You are meant to scrap the NEAT implementation found at the bottom of <code>train_prescriptor.py</code>. Then, replace this with a search algorithm of your choice. As a basic example, you might try replacing NEAT with HyperNEAT or a genetic algorithm, which is easy since these algorithms have the same signature as NEAT, i.e., they don't require backpropagation. But there are many possible algorithms. You might want to revisit the decision making readings for inspiration.</p>
-
-    <h3>5. Evaluate your algorithm</h3>
-    <p>The file <code>prescriptor_robojudge.ipynb</code> contains evaluation routines. Point an element of the <code>prescription_files</code> dictionary to the output CSV file of your prescription model. If you have completed the above steps, you should see an L-shaped curve representing the Pareto frontier. You may compare different results using this method. The goal is to push solutions to the bottom-left.</p>
-
-    <h2>Report</h2>
-    Include the following sections in a separate written report.
-
-    <h3>Methods</h3>
-    Write up the methods you used. Be sure to answer the following questions: What optimization algorithm did you use? What is an advantage of this algorithm for this task? By what technique did you handle the tradeoff between cases and stringency? What libraries did you make use of?
-
-    <h3>Results</h3>
-    Include the plot of stringency vs. cases available at the bottom of <code>prescriptor_robojudge.ipynb</code>.
+        <p>You are meant to scrap the NEAT implementation found at the bottom of <code>train_prescriptor.py</code>.
+            Then, replace this with a search algorithm of your choice. As a basic example, you might try replacing NEAT
+            with HyperNEAT or a genetic algorithm, which is easy since these algorithms have the same signature as NEAT,
+            i.e., they don't require backpropagation. But there are many possible algorithms. You might want to revisit
+            the decision making readings for inspiration.</p> -->
 
 
-    <h2>Submit your work</h2>
-    <p>Prepare a .zip file containing your project directory and your report. Please do not include the environment. Make sure to note your partner's name if you worked with a partner. Upload the file to Canvas.
+        <h3>4. (Optional and bonus)</h3>
+        <p> To follow up, you can also design other forms of the weights and fitness functions. Just try and play with
+            it. Even more advanced, there are a few ways to optimize in a multi-objective setting, such as NSGA2 or
+            MOEA/D. You are free to set the fitness function as multi-objective functions and play with it. Really good
+            answer will get 10 more points.</p>
 
-    <h2>Grading</h2>
-    <p>Code (70 points)
-    <ul><li> Complete (70 points). NEAT is replaced by a different search algorithm. There is a model architecture class defined. The final trained model(s) are evaluated, and multiple points on the Pareto frontier are plotted.</li></ul>
-    <p>Report (30 points)
-    <ul>
-        <li>Description and justification of the search algorithm used (15 points)</li>
-        <li>Other methods questions (5 points)</li>
-        <li>Stringency vs. cases plot included (10 points)</li>
-    </ul>
-    </p>
+        <h3>5. Evaluate and visualize different prescriptors</h3>
+        <p>The file <code>prescriptor_robojudge.ipynb</code> contains evaluation routines. Point an element of the
+            <code>prescription_files</code> dictionary to the output CSV file of your prescription model. If you have
+            completed the above steps, you should see an L-shaped curve representing the Pareto frontier. To get better
+            grades, you should try to come up with sets of coefficients so that the L-shaped curve is as close to the
+            axes and the origin, as possible, that is, such that the solutions minimize the tradeoffs between cases and
+            stringency as well as possible. You may compare different results using this method (in case that you do
+            step 4).
+        </p>
 
-</main>
+
+        <h2>Report</h2>
+        Include the following sections in a separate written report.
+
+        <h3>Methods</h3>
+        Write up how you train with NEAT under diffferent weight settings. Be sure to answer the following questions:
+        <ul>
+            <li>How did you revise the fitness function and why?
+            <li>What stragety did you use to choose the weight coefficients?
+            <li>What did you observe between the different weight settings and the tradeoff between cases and
+                stringency?
+            <li>What do you learn from it?
+            <li>For those who do optional step: What is the improvement and difference between different forms of
+                fitness?
+        </ul>
+        <h3>Results</h3>
+        Include the plot of stringency vs. cases available at the bottom of <code>prescriptor_robojudge.ipynb</code>.
+
+
+        <h2>Submit your work</h2>
+        <p> You need to submit your python code and report via Canvas. Make sure to note your partner's name if you
+            worked with a partner.
+
+    </main>
 </body>
+
 </html>
